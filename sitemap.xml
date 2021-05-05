@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://iosgg.cn/README.html</loc>
+    
+    <lastmod>2021-05-05</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://iosgg.cn/about/index.html</loc>
     
     <lastmod>2021-05-05</lastmod>
@@ -65,13 +72,6 @@
   </url>
   
   <url>
-    <loc>http://iosgg.cn/2018/01/26/18-iOS-crash/</loc>
-    
-    <lastmod>2021-05-05</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://iosgg.cn/2016/03/25/2-git_basic/</loc>
     
     <lastmod>2021-05-05</lastmod>
@@ -80,6 +80,13 @@
   
   <url>
     <loc>http://iosgg.cn/2018/09/03/19-ios-hybrid/</loc>
+    
+    <lastmod>2021-05-05</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://iosgg.cn/2018/01/26/18-iOS-crash/</loc>
     
     <lastmod>2021-05-05</lastmod>
     

@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="zh-ch"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> iOS 性能优化实践 · 阿斌的技术博客</title><meta name="description" content="iOS 性能优化实践 - Abin"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://iosgg.cn/atom.xml" title="阿斌的技术博客"><meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="阿斌的技术博客" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/xiubinwong" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">iOS 性能优化实践</h1><div class="post-info">May 27, 2019</div><div class="post-content"><p>随着业务的不断迭代和功能的逐渐增多，或是业务的需要，APP 在体量上来之后或多或少都会遇见性能问题。</p>
+<p>笔者所在的直播技术团队就遇见了在很大的直播间里，有着持续的大量的广播发送到客户端，而大量的广播会造成 UI 的更新或者动画的展示造成的性能问题。本篇博客就主要记录了我对所遇到的性能问题的思考和解决办法。</p>
+<a id="more"></a>
+
+<h3 id="性能问题的发现和定位"><a href="#性能问题的发现和定位" class="headerlink" title="性能问题的发现和定位"></a>性能问题的发现和定位</h3><p>一般而言，除非是性能比较敏感的页面，我们在开发中是不会去着重的考虑性能问题，但是随着功能的迭代，原本之前简单的页面变的复杂，多出了动画或者比较多的视图层级和特殊效果，逐渐就会变得笨重。除此之外就是本来没有多少问题的页面，在某些场景下就会有很严重的性能问题。</p>
+<p>解决这些问题的第一步就是发现问题。那么，如何做到定位和发现呢？</p>
+<h5 id="卡顿检测工具"><a href="#卡顿检测工具" class="headerlink" title="卡顿检测工具"></a>卡顿检测工具</h5><p>对于卡顿检测工具，一般来说有两种实现方案：</p>
+<ol>
+<li>主线程卡顿监控。在子线程通过判断主线程的runloop状态来确定是否为卡顿</li>
+<li>FPS 监控。原理是计算屏幕刷新的两次间隔，过大时判断为卡顿。</li>
+</ol>
+<p>两种方案抖动都比较大，但都具备参考意义，同时可以分析其他参数比如 CPU 和 内存的占用来判断是否是真正的卡顿。</p>
+<h5 id="压力测试"><a href="#压力测试" class="headerlink" title="压力测试"></a>压力测试</h5><p>卡顿检测工具只能发现常规的性能问题，但是对当只有特殊场景下才会出现的问题就无能为力了。这个情况就需要人为的模拟这些特殊场景。</p>
+<p>直播 APP 的业务上有个特点：用户送的道具动画要足够酷炫（毕竟是花了钱的）；用户发送的弹幕要尽可能的展示，因为这是核心体验。这两个功能在很大的直播间下性能问题会被放大，因为平时开发中很少会遇见<strong><em>大量且持续</em></strong>的道具和弹幕。</p>
+<p>压力测试可以模拟线上一些大活动或者直播间的场景，造成海量弹幕和道具动画，这个时候去分析和检测，可以很轻易的发现各种平时隐藏的小问题。</p>
+<h5 id="Instruments-分析工具"><a href="#Instruments-分析工具" class="headerlink" title="Instruments 分析工具"></a>Instruments 分析工具</h5><p>上面两个主要讲的是如何发现问题，那么当发现问题之后就需要去定位这些问题，才能再进行解决。</p>
+<p>利用官方提供的性能分析工具，Leaks 和 Allocations 可以分析内存相关的问题；Core Animation 分析 UI 相关的问题；最常用的就是 Time Profiler，用来分析CPU 占用和方法耗时来定位卡顿问题。网上相关的资料也比较多，这里就不展开来说了。</p>
+<h3 id="问题的治理和优化方案"><a href="#问题的治理和优化方案" class="headerlink" title="问题的治理和优化方案"></a>问题的治理和优化方案</h3><p><a href="https://github.com/ibireme/" target="_blank" rel="noopener">ibireme</a> 在 <a href="https://blog.ibireme.com/2015/11/12/smooth_user_interfaces_for_ios/" target="_blank" rel="noopener">iOS 保持界面流畅的技巧</a> 一文中也有提及 CPU 和 GPU 分别的资源消耗和解决方案。基本上性能问题的治理就是避免大的资源消耗；空间换取时间；让 CPU 和 GPU 做自己擅长的事情。</p>
+<p>先简单说下我实现的方案，对于弹幕这个性能大户，我采用了基于 CoreText 排版技术来计算图文混排中的各种尺寸和位置，然后在异步绘制这些文字和图片，最后生成一张位图在主线程去显示。详细可见 demo <a href="https://github.com/xiubinwong/WDText" target="_blank" rel="noopener">WDText</a>，基本上参考借鉴了 YYText 和 AsyncDisplayKit 的思路。所实现的排版和渲染框架的核心思想只有一个：对于一条弹幕UI，尽可能的将内容放到后台线程去排版绘制，所有非文字UI都抽象成 Attachment，扩展了 <code>DrawAble</code> 能力之后便支持在后台去绘制。这样可以减少主线程的耗时之外也可以大量的减少视图层级。</p>
+<h5 id="减少视图层级-amp-amp-手动计算-frame"><a href="#减少视图层级-amp-amp-手动计算-frame" class="headerlink" title="减少视图层级 &amp;&amp; 手动计算 frame"></a>减少视图层级 &amp;&amp; 手动计算 frame</h5><p>Time Profiler 中发现 masonry 的方法耗时极高，最后定位到了 cell 上的控件居然是使用的自动布局，究其原因是早期业务使用自动布局也并没有性能问题，随后慢慢的迭代为了保持统一也是继续使用了自动布局技术。</p>
+<p>cell 中有多个 image view 组成一个弹幕背景，也有用户的等级、头衔和身份等信息视图，这些 background images 预先在后台线程预先合成一个 image，这样对应的 background image view 也可以减少到一个。</p>
+<p>手动计算 frame是一个很简单但是在长期的业务迭代中会积少成多的一个问题，而且当视图足够复杂时，用手动计算frame来替代 autolayout 也是一个很繁琐的任务。不过好在，我在尽可能的减少了视图层级之后，需要计算的 UI 控件由十数个减少到了三个，也算是意外之喜了。</p>
+<h5 id="预处理"><a href="#预处理" class="headerlink" title="预处理"></a>预处理</h5><p>这块所做的工作主要是业务接收到广播之后，在后台线程去转换数据，使用 CoreText 去预排版，计算该弹幕所占的位置和大小。同时计算富文本弹幕中的图片位置。并把这些数据存放在 cell view model 中，也变相的缓存了 cell 的高度。</p>
+<h5 id="预渲染"><a href="#预渲染" class="headerlink" title="预渲染"></a>预渲染</h5><p>弹幕中的用户等级信息之类的信息有着不规则路径和背景填充，之前的实现方案是磨切圆角和 draw 来实现。分析发现性能问题之后，直接放入后台去预先绘制成一个 image 再显示，至于如何在后台绘制显示一张图片，后面会提到。</p>
+<h5 id="异步绘制"><a href="#异步绘制" class="headerlink" title="异步绘制"></a>异步绘制</h5><p>为了更好利用多核多线程的优势，把繁重的渲染任务扔到后台线程去执行，绘制为一张位图之后设置给 layer 的 contents 属性，大体逻辑如下，真实场景会增加一些条件判断：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)_display &#123;</span><br><span class="line">    <span class="built_in">dispatch_async</span>([<span class="keyword">self</span> _queue], ^&#123;</span><br><span class="line">        <span class="built_in">CGContextRef</span> context = <span class="built_in">UIGraphicsGetCurrentContext</span>();</span><br><span class="line">        <span class="comment">// 开始绘制</span></span><br><span class="line">        <span class="built_in">dispatch_async</span>(dispatch_get_main_queue(), ^&#123;</span><br><span class="line">            <span class="keyword">self</span>.contents = (__bridge <span class="keyword">id</span>)(image.CGImage);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h5 id="减少线程数量"><a href="#减少线程数量" class="headerlink" title="减少线程数量"></a>减少线程数量</h5><p>性能问题治理完之后，压测的表现情况并不乐观，查看日志有较多的如下输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Event:           wakeups</span><br><span class="line">Wakeups:         45003 wakeups over the last 240 seconds (188 wakeups per second average), exceeding limit of 150 wakeups per second over 300 seconds</span><br><span class="line">Action taken:    none</span><br><span class="line">Duration:        239.91s</span><br><span class="line">Steps:           0</span><br></pre></td></tr></table></figure>
+
+<p>最后恍然大悟，发现是线程过多导致。原因就是 Socket 数据的解析，序列化，以及到各个业务层的分发全是使用 GCD 来分发，参考了 <a href="https://developer.apple.com/videos/play/wwdc2017/706/" target="_blank" rel="noopener">WWDC-Modernizing Grand Central Dispatch Usage</a> 的优化指南之后通过设置 target queue 来限制了线程的并发。</p>
+<h5 id="降级"><a href="#降级" class="headerlink" title="降级"></a>降级</h5><blockquote>
+<p>没有什么问题是降级解决不了的，如果有，那就再降一次</p>
+</blockquote>
+<p>降级是一个见效很快，但也是最后不得已而为之的手段。对于高频次的性能问题可以通过在线配置限制速率来实现降级，具体到直播业务中就是限制广播的分发速率。对于动画等性能大户可以是动画效果降级使用低配版本的资源。</p>
+<p>这些都可以快速的解决问题，但是是以降低用户体验为手段来实现的，是不到最后基本不会采用的方案。</p>
+<h3 id="优化结果确认"><a href="#优化结果确认" class="headerlink" title="优化结果确认"></a>优化结果确认</h3><p>性能问题不能一拍头脑想当然的来优化，优化之后也需要确认是否有效果。FPS 是否提升了？提升的同时 Memory 和 CPU 的占用是否也跟着提升了，提升了多少？是否可接受？这些都需要在考量之中。我们就需要分析优化前后的几个重要指标来衡量。一般而言有三个基础指标：FPS、Memory 和 CPU usage。我简单的实现了一个小工具，来分析和导出这三个指标数据，详细见 demo <a href="https://github.com/xiubinwong/GGWatcher" target="_blank" rel="noopener">GGWatcher</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>优化的主要工作点：</p>
+<ul>
+<li>性能问题定位和分析</li>
+<li>缓存视图位置和尺寸，cell 的高度</li>
+<li>减少视图层级</li>
+<li>autolayout 改为手动计算 frame</li>
+<li>多张图片预先合成一张</li>
+<li>实现排版框架支持后台线程异步排版和渲染</li>
+<li>限制线程并发</li>
+<li>优化效果确认</li>
+</ul>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/09/03/19-ios-hybrid/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+var disqus_identifier = '2019/05/27/20-ios-performance/';
+var disqus_title = 'iOS 性能优化实践';
+var disqus_url = 'http://iosgg.cn/2019/05/27/20-ios-performance/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//sanyucz.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2021 <a href="http://iosgg.cn">Abin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/m-forks/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-100885072-1",'auto');ga('send','pageview');</script></body></html>

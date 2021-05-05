@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="zh-ch"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> H5笔记之CSS · 阿斌的技术博客</title><meta name="description" content="H5笔记之CSS - Abin"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://iosgg.cn/atom.xml" title="阿斌的技术博客"><meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="阿斌的技术博客" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/xiubinwong" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">H5笔记之CSS</h1><div class="post-info">Feb 22, 2016</div><div class="post-content"><p>CSS 全称是<strong>Cascading Style Sheets</strong>，层叠样式表，被用来控制HTML标签的样式，美化网页<br>。CSS有两个重点： <strong>属性</strong> 和 <strong>选择器</strong> 。</p>
+<h4 id="CCS的编写格式"><a href="#CCS的编写格式" class="headerlink" title="CCS的编写格式"></a>CCS的编写格式</h4><p>CCS的编写格式是以键值对的形式，如：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">color</span> : <span class="selector-tag">red</span>;</span><br><span class="line"><span class="selector-tag">background-color</span> : <span class="selector-tag">blue</span>;</span><br><span class="line"><span class="selector-tag">font-size</span> : 20<span class="selector-tag">px</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>属性一般由属性名和属性值组成，左边是属性名，右边是属性的值</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="CSS有3种书写形式："><a href="#CSS有3种书写形式：" class="headerlink" title="CSS有3种书写形式："></a>CSS有3种书写形式：</h4><ol>
+<li>行内样式：（内联样式）直接在标签的 <strong>style</strong> 属性中书写</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;body style="color : red;"&gt;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>页内样式：在本网页的 <strong>style</strong>标签中书写</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="selector-tag">style</span>&gt;</span><br><span class="line">&lt;<span class="selector-tag">body</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/style&gt;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>外部样式：在单独的CSS文件中书写，然后在网页中用link引入</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;link rel="stylesheet" href="index.css"&gt;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="CSS选择器"><a href="#CSS选择器" class="headerlink" title="CSS选择器:"></a>CSS选择器:</h4><h5 id="1-标签选择器"><a href="#1-标签选择器" class="headerlink" title="1. 标签选择器"></a>1. 标签选择器</h5><p>根据标签名查找标签：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="selector-tag">div</span>&gt;<span class="selector-tag">div1</span>&lt;<span class="selector-tag">div</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<p>找到标签，设置样式：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h5 id="2-类选择器"><a href="#2-类选择器" class="headerlink" title="2. 类选择器"></a>2. 类选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;p class="high"&gt;hello world&lt;/&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.high</span>&#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-id选择器"><a href="#3-id选择器" class="headerlink" title="3. id选择器"></a>3. id选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;p id="first"&gt;Hello world&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-id">#first</span>&#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h5 id="4-并列选择器"><a href="#4-并列选择器" class="headerlink" title="4. 并列选择器"></a>4. 并列选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="high"&gt;div high&lt;/div&gt;</span><br><span class="line">&lt;div class="low"&gt;div low&lt;/div&gt;</span><br><span class="line">&lt;p class="high"&gt;p high&lt;/p&gt;</span><br><span class="line">&lt;p class="low"&gt;p low&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span>, <span class="selector-class">.high</span>&#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>并列选择，只要一个符合条件就可以<br>结果：</p>
+<div style="text-align:center;background-color:lightgray" >
+<font color=red>div high</font><br>
+<font color=red>div low</font><br>
+<font color=red>p high</font><br>
+<font color=black>p low</font><br>
+</div>
+
+
+
+<h5 id="5-复合选择器"><a href="#5-复合选择器" class="headerlink" title="5. 复合选择器"></a>5. 复合选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="high"&gt;div high&lt;/div&gt;</span><br><span class="line">&lt;div class="low"&gt;div low&lt;/div&gt;</span><br><span class="line">&lt;p class="high"&gt;p high&lt;/p&gt;</span><br><span class="line">&lt;p class="low"&gt;p low&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span> <span class="selector-class">.high</span>&#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>复合选择，必须全部符合条件就可以<br>结果：</p>
+<div style="text-align:center;background-color:lightgray" >
+<font color=red>div high</font><br>
+<font color=black>div low</font><br>
+<font color=black>p high</font><br>
+<font color=black>p low</font><br>
+</div>
+
+
+
+<h5 id="6-后代选择器"><a href="#6-后代选择器" class="headerlink" title="6. 后代选择器"></a>6. 后代选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="selector-tag">div</span>&gt;</span><br><span class="line">&lt;p&gt;div -&gt; p&lt;/p&gt;</span><br><span class="line">&lt;<span class="selector-tag">span</span>&gt;</span><br><span class="line">&lt;p&gt;div -&gt; span -&gt; p&lt;/p&gt;</span><br><span class="line">&lt;/span&gt;</span><br><span class="line">&lt;/div&gt;</span><br><span class="line">&lt;p&gt;div p&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span> <span class="selector-tag">p</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只要是在<strong>div</strong> 里面的 <strong>p</strong> 标签，都符合要求，结果：</p>
+<div style="text-align:center;background-color:lightgray" >
+<font color=red>div -> p</font><br>
+<font color=red>div -> span -> p</font><br>
+<font color=black>div p</font><br>
+</div>
+
+
+
+<h5 id="7-直接后代选择器"><a href="#7-直接后代选择器" class="headerlink" title="7. 直接后代选择器"></a>7. 直接后代选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="selector-tag">div</span>&gt;</span><br><span class="line">&lt;p&gt;div -&gt; p&lt;/p&gt;</span><br><span class="line">&lt;<span class="selector-tag">span</span>&gt;</span><br><span class="line">&lt;p&gt;div -&gt; span -&gt; p&lt;/p&gt;</span><br><span class="line">&lt;/span&gt;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span> <span class="selector-tag">p</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>必须是直接在<strong>div</strong> 里面的 <strong>p</strong> 标签，才符合要求，即儿子可以，孙子就不行<br>结果：</p>
+<div style="text-align:center;background-color:lightgray" >
+<font color=red>div -> p</font><br>
+<font color=black>div -> span -> p</font><br>
+</div>
+
+
+
+<h5 id="8-相邻兄弟选择器"><a href="#8-相邻兄弟选择器" class="headerlink" title="8. 相邻兄弟选择器"></a>8. 相邻兄弟选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="selector-tag">div</span>&gt;</span><br><span class="line">&lt;p&gt;div -&gt; p&lt;/p&gt;</span><br><span class="line">&lt;<span class="selector-tag">span</span>&gt;</span><br><span class="line">&lt;p&gt;div -&gt; span -&gt; p&lt;/p&gt;</span><br><span class="line">&lt;/span&gt;</span><br><span class="line">&lt;/div&gt;</span><br><span class="line">&lt;p&gt;div p&lt;/p&gt;</span><br><span class="line">&lt;p&gt;p p&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span> + <span class="selector-tag">p</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只要是在<strong>div</strong> 里面的 <strong>p</strong> 标签，都符合要求，结果：</p>
+<div style="text-align:center;background-color:lightgray" >
+<font color=black>div -> p</font><br>
+<font color=black>div -> span -> p</font><br>
+<font color=red>div p</font><br>
+<font color=black>p p</font><br>
+</div>
+
+
+
+<h5 id="9-属性选择器"><a href="#9-属性选择器" class="headerlink" title="9. 属性选择器"></a>9. 属性选择器</h5><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;div name="Jack"&gt;name = Jack&lt;/div&gt;</span><br><span class="line">&lt;div name="Tom"&gt;name = Tom&lt;/div&gt;</span><br><span class="line">&lt;div name="Bob" age="20"&gt;name = Bob, age = 20&lt;/div&gt;</span><br><span class="line">&lt;div&gt;no name&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">div</span><span class="selector-attr">[name]</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: red;</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-tag">div</span><span class="selector-attr">[name]</span><span class="selector-attr">[age]</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: green;</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-tag">div</span><span class="selector-attr">[name=<span class="string">"Tom"</span>]</span> &#123;</span><br><span class="line"><span class="attribute">color </span>: yellow;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<div style="text-align:center;background-color:lightgray" >
+<font color=red>name = Jack</font><br>
+<font color=yellow>name = Tom</font><br>
+<font color=green>name = Bob, age = 20</font><br>
+<font color=black>no name</font><br>
+</div>
+
+
+
+<h5 id="10-伪类"><a href="#10-伪类" class="headerlink" title="10. 伪类"></a>10. 伪类</h5><table>
+<thead>
+<tr>
+<th>属性</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>:active</td>
+<td>向被激活的的元素添加样式</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody></table>
+<h5 id="11-伪元素"><a href="#11-伪元素" class="headerlink" title="11. 伪元素"></a>11. 伪元素</h5><p>…</p>
+<h4 id="选择器优先级"><a href="#选择器优先级" class="headerlink" title="选择器优先级"></a>选择器优先级</h4><p>选择器针对性越强、范围越小，优先级就越高<br>选择器的权值：</p>
+<table>
+<thead>
+<tr>
+<th>选择器</th>
+<th>权值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>通配符</td>
+<td>0</td>
+</tr>
+<tr>
+<td>标签</td>
+<td>1</td>
+</tr>
+<tr>
+<td>类</td>
+<td>10</td>
+</tr>
+<tr>
+<td>属性</td>
+<td>10</td>
+</tr>
+<tr>
+<td>伪类</td>
+<td>10</td>
+</tr>
+<tr>
+<td>id</td>
+<td>100</td>
+</tr>
+<tr>
+<td>important</td>
+<td>1000</td>
+</tr>
+</tbody></table>
+<ul>
+<li>原则：选择器的权值加在一起，大的优先，权值一样，后定义的优先</li>
+</ul>
+</div></article></div></main><footer><div class="paginator"><a href="/2016/03/25/2-git_basic/" class="prev">PREV</a><a href="/2016/02/20/0-blog-preface/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+var disqus_identifier = '2016/02/22/1-CSS-with-H5/';
+var disqus_title = 'H5笔记之CSS';
+var disqus_url = 'http://iosgg.cn/2016/02/22/1-CSS-with-H5/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//sanyucz.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2021 <a href="http://iosgg.cn">Abin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/m-forks/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-100885072-1",'auto');ga('send','pageview');</script></body></html>

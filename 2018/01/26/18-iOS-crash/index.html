@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="zh-ch"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> iOS Crash文件的解析 · 阿斌的技术博客</title><meta name="description" content="iOS Crash文件的解析 - Abin"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://iosgg.cn/atom.xml" title="阿斌的技术博客"><meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="阿斌的技术博客" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/xiubinwong" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">iOS Crash文件的解析</h1><div class="post-info">Jan 26, 2018</div><div class="post-content"><blockquote>
+<p><a href="https://developer.apple.com/library/content/technotes/tn2151/_index.html#//apple_ref/doc/uid/DTS40008184-CH1-INTRODUCTION" target="_blank" rel="noopener">相关 Apple 官方文档</a></p>
+</blockquote>
+<p>iOS Crash文件的解析需要三个文件：</p>
+<ul>
+<li>bilibili.crash/bilibili.ips - 从崩溃的手机、itunes connect或者第三方日志系统获得</li>
+<li>bilibili.dSYM - 从 xcarchive 文件里获得</li>
+<li>symbolicatecrash 在 xcode 里，不同版本所在位置也不一样</li>
+</ul>
+<a id="more"></a>
+
+<h3 id="解析步骤"><a href="#解析步骤" class="headerlink" title="解析步骤"></a>解析步骤</h3><p>1.新建一个文件夹，将上面四个文件放进去，使用以下命令查找 symbolicatecrash 文件的位置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find &#x2F;Applications&#x2F;Xcode.app -name symbolicatecrash -type f</span><br></pre></td></tr></table></figure>
+
+<p>2.使用以下命令确定和 bilibili.dSYM 文件里的 UUID 一致</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dwarfdump --uuid bilibili.dSYM</span><br></pre></td></tr></table></figure>
+
+<p>3.使用该命令解析：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;symbolicatecrash bilibili.crash bilibili.dSYM &gt; crash.log</span><br></pre></td></tr></table></figure>
+
+<p>如果遇到无法找到DEVELOPER_DIR的错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export DEVELOPER_DIR&#x3D;&#39;&#x2F;Applications&#x2F;Xcode.app&#x2F;Contents&#x2F;Developer&#39;</span><br></pre></td></tr></table></figure>
+
+<p>打开新生成的 crash.log 文件，搜索关键词 Exception 查看崩溃信息，从 <code>Termination Reason: Namespace SPRINGBOARD, Code 0x8badf00d</code> 中的 code 可以确定大致原因。</p>
+<h3 id="Exception-Type"><a href="#Exception-Type" class="headerlink" title="Exception Type"></a>Exception Type</h3><ul>
+<li>EXC_BAD_ACCESS</li>
+</ul>
+<p>此类型的Excpetion是我们最长碰到的Crash，通常用于访问了不改访问的内存导致。一般EXC_BAD_ACCESS后面的”()”还会带有补充信息。</p>
+<pre><code>* SIGSEGV: 通常由于重复释放对象导致，这种类型在切换了ARC以后应该已经很少见到了。
+* SIGABRT:  收到Abort信号退出，通常Foundation库中的容器为了保护状态正常会做一些检测，例如插入nil到数组中等会遇到此类错误。
+* SEGV:（Segmentation  Violation），代表无效内存地址，比如空指针，未初始化指针，栈溢出等；
+* SIGBUS：总线错误，与 SIGSEGV 不同的是，SIGSEGV 访问的是无效地址，而 SIGBUS 访问的是有效地址，但总线访问异常(如地址对齐问题)
+* SIGILL：尝试执行非法的指令，可能不被识别或者没有权限</code></pre><ul>
+<li>EXC_BAD_INSTRUCTION</li>
+</ul>
+<p>此类异常通常由于线程执行非法指令导致</p>
+<ul>
+<li>EXC_ARITHMETIC</li>
+</ul>
+<p>除零错误会抛出此类异常</p>
+<h3 id="Exception-Code"><a href="#Exception-Code" class="headerlink" title="Exception Code"></a>Exception Code</h3><ul>
+<li>0xbaaaaaad 此种类型的log意味着该Crash log并非一个真正的Crash，它仅仅只是包含了整个系统某一时刻的运行状态。通常可以通过同时按Home键和音量键，可能由于用户不小心触发</li>
+<li>0xbad22222当VOIP程序在后台太过频繁的激活时，系统可能会终止此类程序</li>
+<li>0x8badf00d 程序启动或者恢复时间过长被watch dog终止</li>
+<li>0xc00010ff 程序执行大量耗费CPU和GPU的运算，导致设备过热，触发系统过热保护被系统终止</li>
+<li>0xdead10cc 程序退到后台时还占用系统资源，如通讯录被系统终止</li>
+<li>0xdeadfa11 程序无响应用户强制关闭</li>
+</ul>
+<h3 id="脚本自动解析"><a href="#脚本自动解析" class="headerlink" title="脚本自动解析"></a>脚本自动解析</h3><p>2019 年更新…</p>
+<p>如果每次都手动输入命令，也太繁琐了些，写个脚本自动解析，还能支持批量解。后缀改成 <code>command</code> 还能双击打开。。。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">set -e</span><br><span class="line">function export_()</span><br><span class="line">&#123;</span><br><span class="line">	cd $1</span><br><span class="line">	export DEVELOPER_DIR="/Applications/XCode.app/Contents/Developer"</span><br><span class="line">	if [[ ! -d outlog ]]; then</span><br><span class="line">		mkdir outlog</span><br><span class="line">	else </span><br><span class="line">		echo "outlog exist"</span><br><span class="line">	fi</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function analyze()</span><br><span class="line">&#123;</span><br><span class="line">	for crash_file in $(find . -name "*.ips" -o -name "*.crash"); do</span><br><span class="line">        new_file=$(basename $crash_file)</span><br><span class="line"><span class="meta">		$</span><span class="bash">1 <span class="variable">$crash_file</span> <span class="variable">$2</span> &gt; outlog/<span class="variable">$new_file</span>+<span class="string">".txt"</span></span></span><br><span class="line">	done</span><br><span class="line">	echo "done"</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">if [[ $#  &gt; 0 ]]; then</span><br><span class="line">	echo </span><br><span class="line">else </span><br><span class="line">	set $(pwd)</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">export_ $1</span><br><span class="line">analyze $(find /Applications/Xcode.app -name symbolicatecrash -type f | tail -1) ./bili-universal_arm64</span><br></pre></td></tr></table></figure></div></article></div></main><footer><div class="paginator"><a href="/2018/09/03/19-ios-hybrid/" class="prev">PREV</a><a href="/2017/10/10/17-send-week-report-email/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+var disqus_identifier = '2018/01/26/18-iOS-crash/';
+var disqus_title = 'iOS Crash文件的解析';
+var disqus_url = 'http://iosgg.cn/2018/01/26/18-iOS-crash/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//sanyucz.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2021 <a href="http://iosgg.cn">Abin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/m-forks/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-100885072-1",'auto');ga('send','pageview');</script></body></html>

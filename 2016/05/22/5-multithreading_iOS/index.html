@@ -1,0 +1,204 @@
+<!DOCTYPE html><html lang="zh-ch"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> iOS开发中多线程的那些事 · 阿斌的技术博客</title><meta name="description" content="iOS开发中多线程的那些事 - Abin"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://iosgg.cn/atom.xml" title="阿斌的技术博客"><meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="阿斌的技术博客" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/xiubinwong" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">iOS开发中多线程的那些事</h1><div class="post-info">May 22, 2016</div><div class="post-content"><p>iOS开发深入之后还是要接触多线程和runloop的，写篇博客讲解、记录下iOS开发中的多线程技术。</p>
+<h2 id="线程、进程"><a href="#线程、进程" class="headerlink" title="线程、进程"></a>线程、进程</h2><h3 id="什么是线程、进程"><a href="#什么是线程、进程" class="headerlink" title="什么是线程、进程"></a>什么是线程、进程</h3><p>&emsp;&emsp;有的人说进程就像是人的脑袋，线程就是脑袋上的头发~~。其实这么比方不算错，但是更简单的来说，用迅雷下载文件，迅雷这个程序就是一个进程，下载的文件就是一个线程，同时下载三个文件就是多线程。一个进程可以只包含一个线程去处理事务，也可以有多个线程。</p>
+<a id="more"></a>
+
+<h3 id="多线程的优点和缺点"><a href="#多线程的优点和缺点" class="headerlink" title="多线程的优点和缺点"></a>多线程的优点和缺点</h3><p>&emsp;&emsp;多线程可以大大提高软件的执行效率和资源（CPU、内存）利用率，因为CPU只可以处理一个线程（多核CPU另说），而多线程可以让CPU同时处理多个任务（其实CPU同一时间还是只处理一个线程，但是如果切换的够快，就可以了认为同时处理多个任务）。但是多线程也有缺点：当线程过多，会消耗大量的CPU资源，而且，每开一条线程也是需要耗费资源的（iOS主线程占用1M内存空间，子线程占用512KB）。</p>
+<h3 id="iOS开发中的多线程"><a href="#iOS开发中的多线程" class="headerlink" title="iOS开发中的多线程"></a>iOS开发中的多线程</h3><p>&emsp;&emsp;iOS程序在启动后会自动开启一个线程，称为 <strong>主线程</strong> 或者 <strong>UI线程</strong> ，用来显示、刷新UI界面，处理点击、滚动等事件，所以耗费时间的事件（比如网络、磁盘操作）尽量不要放在主线程，否则会阻塞主线程造成界面卡顿。<br>iOS开发中的多线程实现方案有四种：</p>
+<table>
+<thead>
+<tr>
+<th>技术方案</th>
+<th>简介</th>
+<th>语言</th>
+<th>生命周期管理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>pthread</td>
+<td>一套通用的多线程API，适用于Unix\Linux\Windows等系统，跨平台\可移植，使用难度大</td>
+<td>C</td>
+<td>程序员管理</td>
+</tr>
+<tr>
+<td>NSThread</td>
+<td>使用更加面向对象，简单易用，可直接操作线程对象</td>
+<td>Objective-C</td>
+<td>程序员手动实例化</td>
+</tr>
+<tr>
+<td>GCD</td>
+<td>旨在替代NSThread等线程技术，充分利用设备的多核</td>
+<td>C</td>
+<td>自动管理</td>
+</tr>
+<tr>
+<td>NSOperation</td>
+<td>基于GCD（底层是GCD），比GCD多了一些更简单实用的功能，使用更加面向对象</td>
+<td>Objective-C</td>
+<td>自动管理</td>
+</tr>
+</tbody></table>
+<p>多线程中GCD我使用比较多，以GCD为例，多线程有两个核心概念：</p>
+<ol>
+<li>任务 （做什么？）</li>
+<li>队列 （存放任务，怎么做？）</li>
+</ol>
+<p>任务就是你开辟多线程要来做什么？而每个线程都是要加到一个队列中去的，队列决定任务用什么方式来执行。</p>
+<p>线程执行任务方式分为：</p>
+<ol>
+<li>异步执行</li>
+<li>同步执行</li>
+</ol>
+<p>同步执行只能在当前线程执行，不能开辟新的线程。而且是必须、立即执行。而异步执行可以开辟新的线程。</p>
+<p>队列分为：</p>
+<ol>
+<li>并发队列</li>
+<li>串行队列</li>
+</ol>
+<p>并发队列可以让多个线程同时执行（必须是异步），串行队列则是让任务一个接一个的执行。打个比方说，串行队列就是单车道，再多的车也得一个一个的跑（–：我俩车强行并着跑不行？ –：来人，拖出去砍了！），而串行是多车道，可以几辆车同时并着跑。那么到底是几车道？并发队列有个最大并发数，一般可以手动设置。</p>
+<p>那么，线程加入到队列中，到底会怎么执行？</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>并发队列</th>
+<th>串行队列（非主队列）</th>
+<th>主队列（只有主线程，串行队列）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>同步</td>
+<td>不开启新的线程，串行</td>
+<td>不开启新的线程，串行</td>
+<td>不开启新的线程，串行</td>
+</tr>
+<tr>
+<td>异步</td>
+<td>开启新的线程，并发</td>
+<td>开启新的线程，串行</td>
+<td>不开启新的线程，串行</td>
+</tr>
+</tbody></table>
+<p><strong>注意：</strong> </p>
+<ol>
+<li>只用在并发队列异步执行才会开启新的线程并发执行；</li>
+<li>在当前串行队列中开启一个同步线程会造成 <strong>线程阻塞</strong> ，因为上文说过，同步线程需要立即马上执行，当在当前串行队列中创建同步线程时需要在串行队列立即执行任务，而此时线程还需要向下继续执行任务，造成阻塞。</li>
+</ol>
+<p>上面提到线程会阻塞，那么什么是阻塞？除了阻塞之外线程还有其他什么状态？<br>一般来说，线程有五个状态：</p>
+<ul>
+<li>新建状态：线程刚刚被创建，还没有调用 <strong>run</strong> 方法，这个时候的线程就是新建状态；</li>
+<li>就绪状态：在新建线程被创建之后调用了 <strong>run</strong> 方法，但是CPU并不是真正的同时执行多个任务，所以要等待CPU调用，这个时候线程处于就绪状态，随时可能进入下一个状态；</li>
+<li>运行状态：在线程执行过 <strong>run</strong>方法之后，CPU已经调度该线程即线程获取了CPU时间；</li>
+<li>阻塞状态：线程在运行时可能会进入阻塞状态，比如线程睡眠（sleep）；希望得到一个锁，但是该锁正被其他线程拥有。。</li>
+<li>死亡状态：当线程执行完任务或者因为异常情况提前终止了线程</li>
+</ul>
+<h2 id="iOS开发中的多线程的使用"><a href="#iOS开发中的多线程的使用" class="headerlink" title="iOS开发中的多线程的使用"></a>iOS开发中的多线程的使用</h2><h3 id="pthread的使用"><a href="#pthread的使用" class="headerlink" title="pthread的使用"></a>pthread的使用</h3><p>使用下面代码可以创建一个线程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_create</span><span class="params">(<span class="keyword">pthread_t</span> * __restrict, <span class="keyword">const</span> <span class="keyword">pthread_attr_t</span> * __restrict,<span class="keyword">void</span> *(*)(<span class="keyword">void</span> *), <span class="keyword">void</span> * __restrict)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到这个方法有四个参数，主要参数有 <strong>pthread_t * __restrict</strong> ，因为该方法是C语言，所以这个参数不是一个对象，而是一个 <strong>pthread_t</strong> 的地址，还有 <strong>void <em>(</em>)(void *)</strong> 是一个无返回值的函数指针。<br>使用代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> * run(<span class="keyword">void</span> *param)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"currentThread--%@"</span>, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)createThread&#123;</span><br><span class="line">    pthread_t thread;</span><br><span class="line">    pthread_create(&amp;thread, <span class="literal">NULL</span>, run, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>控制台输出：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">currentThread--&lt;<span class="built_in">NSThread</span>: <span class="number">0x7fff38602fb0</span>&gt;&#123;number = <span class="number">2</span>, name = (null)&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>number = 1</strong> 的线程是主线程，不为一的时候都是子线程。</p>
+<h3 id="NSThread的使用"><a href="#NSThread的使用" class="headerlink" title="NSThread的使用"></a>NSThread的使用</h3><p>NSThread创建线程一般有三种方式：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// equivalent to the first method with kCFRunLoopCommonModes</span></span><br><span class="line">- (<span class="keyword">void</span>)performSelectorInBackground:(SEL)aSelector withObject:(<span class="keyword">nullable</span> <span class="keyword">id</span>)arg;</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">+ (<span class="keyword">void</span>)detachNewThreadSelector:(SEL)selector toTarget:(<span class="keyword">id</span>)target withObject:(<span class="keyword">nullable</span> <span class="keyword">id</span>)argument;</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">- (<span class="keyword">instancetype</span>)initWithTarget:(<span class="keyword">id</span>)target selector:(SEL)selector object:(<span class="keyword">nullable</span> <span class="keyword">id</span>)argument</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>前两种创建之后会自动执行，第三种方式创建后需要手动执行；</li>
+<li>第一种创建方式是创建一个子线程，类似的 <strong>- (void)performSelectorOnMainThread:(SEL)aSelector withObject:(nullable id)arg waitUntilDone:(BOOL)wait modes:(nullable NSArray&lt;NSString *&gt; *)array</strong> 方法可以创建并发任务在主线程中执行，<strong>- (void)performSelector:(SEL)aSelector onThread:(NSThread *)thr withObject:(nullable id)arg waitUntilDone:(BOOL)wait modes:(nullable NSArray&lt;NSString *&gt; *)array</strong> 可以选择在哪个线程中执行。</li>
+</ol>
+<p>示例代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)createThread&#123;</span><br><span class="line">	<span class="comment">// 创建线程</span></span><br><span class="line">	<span class="built_in">NSThread</span> *thread = [[<span class="built_in">NSThread</span> alloc] initWithTarget:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(run:) object:<span class="string">@"我是参数"</span>];</span><br><span class="line">	thread.name = <span class="string">@"我是线程名字啊"</span>;</span><br><span class="line">	<span class="comment">// 启动线程</span></span><br><span class="line">	[thread start];</span><br><span class="line">	<span class="comment">// 或者 [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:@"我是参数"];</span></span><br><span class="line">	<span class="comment">// 或者 [self performSelectorInBackground:@selector(run:) withObject:@"我是参数"];</span></span><br><span class="line">&#125;</span><br><span class="line">- (<span class="keyword">void</span>)run:(<span class="built_in">NSString</span> *)param&#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"-----run-----%@--%@"</span>, param, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>控制台输出：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-----run-----我是参数--&lt;<span class="built_in">NSThread</span>: <span class="number">0x7ff8a2f0c940</span>&gt;&#123;number = <span class="number">2</span>, name = 我是线程名字啊&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="GCD的使用"><a href="#GCD的使用" class="headerlink" title="GCD的使用"></a>GCD的使用</h3><p>苹果官方对GCD说：</p>
+<blockquote>
+<p>开发者要做的只是定义执行的任务并追加到适当的 Dispatch Queue 中。</p>
+</blockquote>
+<p>在GCD中我们要做的只是两件事：定义任务；把任务加到队列中。</p>
+<h4 id="dispatch-queue-create-获取-创建队列"><a href="#dispatch-queue-create-获取-创建队列" class="headerlink" title="dispatch_queue_create 获取/创建队列"></a>dispatch_queue_create 获取/创建队列</h4><p>GCD 的队列有两种：</p>
+<table>
+<thead>
+<tr>
+<th>Dispatch Queue 种类</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Serial Dispatch Queue</td>
+<td>等待现在执行中处理结束（串行队列）</td>
+</tr>
+<tr>
+<td>Concurrent Dispatch Queue</td>
+<td>不等待现在执行中处理结束（并行队列）</td>
+</tr>
+</tbody></table>
+<p>GCD中的队列都是 <strong>dispatch_queue_t</strong> 类型，获取/创建方法：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 手动创建队列</span></span><br><span class="line"><span class="built_in">dispatch_queue_t</span> dispatch_queue_create(<span class="keyword">const</span> <span class="keyword">char</span> *label, dispatch_queue_attr_t attr);</span><br><span class="line"><span class="comment">// 1.1 创建串行队列</span></span><br><span class="line">    <span class="built_in">dispatch_queue_t</span> queue = dispatch_queue_create(<span class="string">"com.sanyucz.queue"</span>, DISPATCH_QUEUE_SERIAL);</span><br><span class="line"><span class="comment">// 1.2 创建并行队列</span></span><br><span class="line">    <span class="built_in">dispatch_queue_t</span> queue = dispatch_queue_create(<span class="string">"com.sanyucz.queue"</span>, DISPATCH_QUEUE_CONCURRENT);</span><br><span class="line"><span class="comment">// 2. 获取系统标准提供的 Dispatch Queue</span></span><br><span class="line"><span class="comment">// 2.1 获取主队列</span></span><br><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_get_main_queue();</span><br><span class="line"><span class="comment">// 2.2 获取全局并发队列</span></span><br><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<p>需要说明的是，手动创建队列时候的两个关键参数，<strong>const char *label</strong> 指定队列名称，最好起一个有意义的名字，当然如果你想调试的时候刺激一下，也可以设置为 <strong>NULL</strong>，而 <strong>dispatch_queue_attr_t attr</strong> 参数文档有说明：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*!</span></span><br><span class="line"><span class="comment"> * @const DISPATCH_QUEUE_SERIAL</span></span><br><span class="line"><span class="comment"> * @discussion A dispatch queue that invokes blocks serially in FIFO order.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DISPATCH_QUEUE_SERIAL NULL</span></span><br><span class="line"><span class="comment">/*!</span></span><br><span class="line"><span class="comment"> * @const DISPATCH_QUEUE_CONCURRENT</span></span><br><span class="line"><span class="comment"> * @discussion A dispatch queue that may invoke blocks concurrently and supports</span></span><br><span class="line"><span class="comment"> * barrier blocks submitted with the dispatch barrier API.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DISPATCH_QUEUE_CONCURRENT \</span></span><br><span class="line">		DISPATCH_GLOBAL_OBJECT(dispatch_queue_attr_t, \</span><br><span class="line">		_dispatch_queue_attr_concurrent)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>DISPATCH_QUEUE_SERIAL</strong> 创建串行队列按顺序FIFO（First-In-First-On）先进先出；</li>
+<li><strong>DISPATCH_QUEUE_CONCURRENT</strong> 则会创建并发队列</li>
+</ul>
+<h4 id="dispatch-async-dispatch-sync-创建任务"><a href="#dispatch-async-dispatch-sync-创建任务" class="headerlink" title="dispatch_async/dispatch_sync 创建任务"></a>dispatch_async/dispatch_sync 创建任务</h4><p>创建完队列之后就是定义任务了，有两种方式：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个同步执行任务</span></span><br><span class="line"><span class="keyword">void</span> <span class="built_in">dispatch_sync</span>(<span class="built_in">dispatch_queue_t</span> queue, dispatch_block_t block);</span><br><span class="line"><span class="comment">// 创建一个异步执行任务</span></span><br><span class="line"><span class="keyword">void</span> <span class="built_in">dispatch_async</span>(<span class="built_in">dispatch_queue_t</span> queue, dispatch_block_t block);</span><br></pre></td></tr></table></figure>
+
+<p>完整的示例代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_queue_create(<span class="string">"com.sanyucz.queue.asyncSerial"</span>, DISPATCH_QUEUE_SERIAL);</span><br><span class="line"><span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">   <span class="built_in">NSLog</span>(<span class="string">@"异步 + 串行 - %@"</span>,[<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="dispatch-group-任务组"><a href="#dispatch-group-任务组" class="headerlink" title="dispatch group 任务组"></a>dispatch group 任务组</h4><p>我们可能在实际开发中会遇到这样的需求：在两个任务完成后再执行某一任务。虽然这种情况可以用串行队列来解决，但是我们有更加高效的方法。</p>
+<p>直接上代码，在代码的注释中讲解：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取全局并发队列</span></span><br><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, <span class="number">0</span>);</span><br><span class="line"><span class="comment">// 创建任务组</span></span><br><span class="line"><span class="comment">// dispatch_group_t ：A group of blocks submitted to queues for asynchronous invocation</span></span><br><span class="line">dispatch_group_t group = dispatch_group_create();</span><br><span class="line"><span class="comment">// 在任务组中添加一个任务</span></span><br><span class="line">dispatch_group_async(group, queue, ^&#123;</span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">&#125;);</span><br><span class="line"><span class="comment">// 在任务组中添加另一个任务</span></span><br><span class="line">dispatch_group_async(group, queue, ^&#123;</span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">&#125;);</span><br><span class="line"><span class="comment">// 当任务组中的任务执行完毕之后再执行一下任务</span></span><br><span class="line">dispatch_group_notify(group, queue, ^&#123;</span><br><span class="line">   <span class="comment">//</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="dispatch-barrier-async"><a href="#dispatch-barrier-async" class="headerlink" title="dispatch_barrier_async"></a>dispatch_barrier_async</h4><p>从字面意思就可以看出来这个变量的用处，即阻碍任务执行，它并不是阻碍某一个任务的执行，而是在代码中，在它之前定义的任务会比它先执行，在它之后定义的任务则会在它执行完之后在开始执行。就像一个栏栅。</p>
+<p>使用代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_queue_create(<span class="string">"com.gcd.barrier"</span>, DISPATCH_QUEUE_CONCURRENT);</span><br><span class="line"><span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">   <span class="built_in">NSLog</span>(<span class="string">@"----1-----%@"</span>, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">   <span class="built_in">NSLog</span>(<span class="string">@"----2-----%@"</span>, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;);</span><br><span class="line">dispatch_barrier_async(queue, ^&#123;</span><br><span class="line">   <span class="built_in">NSLog</span>(<span class="string">@"----barrier-----%@"</span>, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;); </span><br><span class="line"><span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">   <span class="built_in">NSLog</span>(<span class="string">@"----3-----%@"</span>, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">   <span class="built_in">NSLog</span>(<span class="string">@"----4-----%@"</span>, [<span class="built_in">NSThread</span> currentThread]);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>控制台输出：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">---<span class="number">-1</span>-----&lt;<span class="built_in">NSThread</span>: <span class="number">0x7fdc60c0fd90</span>&gt;&#123;number = <span class="number">2</span>, name = (null)&#125;</span><br><span class="line">---<span class="number">-2</span>-----&lt;<span class="built_in">NSThread</span>: <span class="number">0x7fdc60c11500</span>&gt;&#123;number = <span class="number">3</span>, name = (null)&#125;</span><br><span class="line">----barrier-----&lt;<span class="built_in">NSThread</span>: <span class="number">0x7fdc60c11500</span>&gt;&#123;number = <span class="number">3</span>, name = (null)&#125;</span><br><span class="line">---<span class="number">-3</span>-----&lt;<span class="built_in">NSThread</span>: <span class="number">0x7fdc60c11500</span>&gt;&#123;number = <span class="number">3</span>, name = (null)&#125;</span><br><span class="line">---<span class="number">-4</span>-----&lt;<span class="built_in">NSThread</span>: <span class="number">0x7fdc60c0fd90</span>&gt;&#123;number = <span class="number">2</span>, name = (null)&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="NSOperation的使用"><a href="#NSOperation的使用" class="headerlink" title="NSOperation的使用"></a>NSOperation的使用</h3><h4 id="NSOperation-及其子类"><a href="#NSOperation-及其子类" class="headerlink" title="NSOperation 及其子类"></a>NSOperation 及其子类</h4><p><strong>NSOperation</strong> 和 <strong>NSOperationQueue</strong> 配合使用也能实现并发多线程，但是需要注意的是 <strong>NSOperation</strong> 是个抽象类，想要封装操作需要使用其子类。<br>系统为我们提供了两个子类：</p>
+<ul>
+<li>NSInvocationOperation</li>
+<li>NSBlockOperation</li>
+</ul>
+<p>当然，我们也可以自定义其子类，只是需要重写 <strong>main()</strong> 方法。</p>
+<p>先看下系统提供两个子类的初始化方法：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">nullable</span> <span class="keyword">instancetype</span>)initWithTarget:(<span class="keyword">id</span>)target selector:(SEL)sel object:(<span class="keyword">nullable</span> <span class="keyword">id</span>)arg;</span><br><span class="line">+ (<span class="keyword">instancetype</span>)blockOperationWithBlock:(<span class="keyword">void</span> (^)(<span class="keyword">void</span>))block;</span><br></pre></td></tr></table></figure>
+
+<p>两个子类初始化方法不一样的地方就是一个用 <strong>实例对象</strong> 和 <strong>方法选择器</strong> 来确定执行一个方法，另外一个是用block闭包保存执行一段代码块。<br>另外 <strong>NSBlockOperation</strong> 还有一个实例方法 <strong>- (void)addExecutionBlock:(void (^)(void))block;</strong> ，只要调用这个方法以至于封装的操作数大于一个就会开启新的线程异步操作。<br>最后调用<strong>NSOperation</strong>的<strong>start</strong>方法启动任务。</p>
+<h4 id="NSOperationQueue"><a href="#NSOperationQueue" class="headerlink" title="NSOperationQueue"></a>NSOperationQueue</h4><p><strong>NSOperation</strong> 默认是执行同步任务，但是我们可以把它加入到 <strong>NSOperationQueue</strong> 中编程异步操作。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)addOperation:(<span class="built_in">NSOperation</span> *)op;</span><br><span class="line">- (<span class="keyword">void</span>)addOperations:(<span class="built_in">NSArray</span>&lt;<span class="built_in">NSOperation</span> *&gt; *)ops waitUntilFinished:(<span class="built_in">BOOL</span>)wait;</span><br><span class="line">- (<span class="keyword">void</span>)addOperationWithBlock:(<span class="keyword">void</span> (^)(<span class="keyword">void</span>))block;</span><br></pre></td></tr></table></figure>
+
+<p>之前提到过多线程并发队列可以设置最大并发数，以及队列的取消、暂停、恢复操作：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建队列</span></span><br><span class="line"><span class="built_in">NSOperationQueue</span> *queue = [[<span class="built_in">NSOperationQueue</span> alloc] init];</span><br><span class="line">    </span><br><span class="line"><span class="comment">// 设置最大并发操作数</span></span><br><span class="line">queue.maxConcurrentOperationCount = <span class="number">2</span>; <span class="comment">// 并发队列</span></span><br><span class="line">queue.maxConcurrentOperationCount = <span class="number">1</span>; <span class="comment">// 串行队列</span></span><br><span class="line"></span><br><span class="line"> <span class="comment">// 恢复队列，继续执行</span></span><br><span class="line">queue.suspended = <span class="literal">NO</span>;</span><br><span class="line"><span class="comment">// 暂停（挂起）队列，暂停执行</span></span><br><span class="line">queue.suspended = <span class="literal">YES</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 取消队列</span></span><br><span class="line">[queue cancelAllOperations];</span><br></pre></td></tr></table></figure>
+
+<h3 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h3><p>多线程使用的时候，可能会多条线程同时访问/赋值某一变量，如不加限制的话多相处同时访问会出问题。具体情况可以搜索一下相关资料，多线程的 <strong>买票问题</strong> 很是经典。<br>iOS线程安全解决方法一般有以下几种：</p>
+<ul>
+<li>@synchronized 关键字</li>
+<li>NSLock 对象</li>
+<li>NSRecursiveLock 递归锁</li>
+<li>GCD (dispatch_sync 或者 dispatch_barrier_async)</li>
+</ul>
+<p>在iOS中线程安全问题一般是关键字 <strong>@synchronized</strong> 用加锁来完成。<br>示例代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">@synchronized</span>(<span class="keyword">self</span>) &#123;</span><br><span class="line">      <span class="comment">// 这里是安全的，同一时间只有一个线程能到这里哦~~      </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是 <strong>synchronized</strong> 后面括号里的 <strong>self</strong> 是个 <strong>token</strong> ，该 <strong>token</strong> 不能使用局部变量，应该是全局变量或者在线程并发期间一直存在的对象。因为线程判断该加锁的代码有没有线程在访问是通过该 <strong>token</strong> 来确定的。</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2016/08/08/6-shadowsocks_vps_gfw/" class="prev">PREV</a><a href="/2016/04/08/4-runtime/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+var disqus_identifier = '2016/05/22/5-multithreading_iOS/';
+var disqus_title = 'iOS开发中多线程的那些事';
+var disqus_url = 'http://iosgg.cn/2016/05/22/5-multithreading_iOS/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//sanyucz.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2021 <a href="http://iosgg.cn">Abin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/m-forks/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-100885072-1",'auto');ga('send','pageview');</script></body></html>

@@ -193,7 +193,7 @@
 <p>在iOS中线程安全问题一般是关键字 <strong>@synchronized</strong> 用加锁来完成。<br>示例代码：</p>
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">@synchronized</span>(<span class="keyword">self</span>) &#123;</span><br><span class="line">      <span class="comment">// 这里是安全的，同一时间只有一个线程能到这里哦~~      </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>需要注意的是 <strong>synchronized</strong> 后面括号里的 <strong>self</strong> 是个 <strong>token</strong> ，该 <strong>token</strong> 不能使用局部变量，应该是全局变量或者在线程并发期间一直存在的对象。因为线程判断该加锁的代码有没有线程在访问是通过该 <strong>token</strong> 来确定的。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2016/08/08/6-shadowsocks_vps_gfw/" class="prev">PREV</a><a href="/2016/04/08/4-runtime/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+</div></article></div></main><footer><div class="paginator"><a href="/2016/08/08/6-shadowsocks_vps_gfw/" class="prev">上一篇</a><a href="/2016/04/08/4-runtime/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
 var disqus_identifier = '2016/05/22/5-multithreading_iOS/';
 var disqus_title = 'iOS开发中多线程的那些事';
 var disqus_url = 'http://iosgg.cn/2016/05/22/5-multithreading_iOS/';

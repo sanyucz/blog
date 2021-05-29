@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="zh-ch"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> Xcode 的 project 文件介绍 · 阿斌的技术博客</title><meta name="description" content="Xcode 的 project 文件介绍 - Abin"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://iosgg.cn/atom.xml" title="阿斌的技术博客"><meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="阿斌的技术博客" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/xiubinwong" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">Xcode 的 project 文件介绍</h1><div class="post-info">Mar 26, 2018</div><div class="post-content"><p>对应一个 iOS 项目而言，我们平时都是直接双击 <code>xcodeproj</code> 文件，打开项目进行代码编写，点击运行之后可以编译运行 APP，却很少思考这个文件的本质上是什么？有哪些部分组成，做用都是什么，这篇文章简单介绍下项目文件的组成。</p>
+<p>下面的三个段落不是按顺序看的。。</p>
+<h2 id="一、项目内容由哪些部分组成"><a href="#一、项目内容由哪些部分组成" class="headerlink" title="一、项目内容由哪些部分组成"></a>一、项目内容由哪些部分组成</h2><p><img src="/images/16187673847932.jpg" alt=""></p>
+<ul>
+<li>Source Files<ul>
+<li>源文件：h/m 文件等</li>
+<li>资源文件：图片、JSON、settings 等</li>
+<li>Infos：plist 配置文件，App 展示的配置信息或者 App 行为的一些配置<ul>
+<li>App 信息</li>
+<li>能力声明</li>
+<li>默认配置</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Targets</li>
+<li>Schemes</li>
+<li>Build Phases：设置一个项目编译的顺序步骤<ul>
+<li>Target Dependencies</li>
+<li>Compile Sources</li>
+<li>Link with Libraries</li>
+<li>Run Script</li>
+</ul>
+</li>
+<li>Build Settings：项目的编译参数<ul>
+<li>Compiler</li>
+<li>Linker</li>
+<li>Assets</li>
+<li>Packaging</li>
+</ul>
+</li>
+</ul>
+<h3 id="Infos"><a href="#Infos" class="headerlink" title="Infos"></a>Infos</h3><p>Info.plist 用于向提供关于 App，或者framework的一些重要信息。它指定了比如一个应用的名称、版本号，启动方式，获取的权限，以及 Schema 的定义。</p>
+<p>代码中可以使用以下代码拿到 info 信息：<code>[[NSBundle mainBundle] infoDictionary]</code><br><img src="/images/16187679564355.jpg" alt=""></p>
+<p>比如在 URL types 里定义一个 scheme 为 <code>demonow</code>，那么在其他 APP 或着 Safari 里使用 <code>demonow://</code> 便可以打开这个 APP。</p>
+<h3 id="Build-Phases"><a href="#Build-Phases" class="headerlink" title="Build Phases"></a>Build Phases</h3><p>定义了构建的过程和步骤，在 Xcode 中，这些步骤可以随意拖动调整顺序。<br>除了 Dependencies 不能挪动，不能删除，只能是第一个被执行的。</p>
+<p>自定义编译前运行的脚本，比如使用 CocoaPods 进行依赖管理的项目里，会有一项 <code>[CP] Check Pods Manifest.lock</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">diff "$&#123;PODS_PODFILE_DIR_PATH&#125;/Podfile.lock" "$&#123;PODS_ROOT&#125;/Manifest.lock" &gt; /dev/null</span><br><span class="line">if [ $? != 0 ] ; then</span><br><span class="line">    # print error to STDERR</span><br><span class="line">    echo "error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation." &gt;&amp;2</span><br><span class="line">    exit 1</span><br><span class="line">fi</span><br><span class="line"><span class="meta">#</span><span class="bash"> This output is used by Xcode <span class="string">'outputs'</span> to avoid re-running this script phase.</span></span><br><span class="line">echo "SUCCESS" &gt; "$&#123;SCRIPT_OUTPUT_FILE_0&#125;"</span><br></pre></td></tr></table></figure>
+
+<p>每次 build 前都会执行这个脚本去对 <code>Podfile.lock</code> 和 <code>Pods/Manifest.lock</code> 文件进行比对，如果依赖库的版本不一样，就会编译失败，提示执行 <code>pod install</code>，来确保配置文件的版本号和本地库的版本号一致。</p>
+<p><img src="/images/build_phases_pod_script.png" alt="build_phases_pod_script"><br><img src="/images/pod_lock_error.png" alt="pod_lock_error"></p>
+<h3 id="Build-Settings"><a href="#Build-Settings" class="headerlink" title="Build Settings"></a>Build Settings</h3><p>在 build settings 中，可以配置每个任务的详细内容。build 过程的每一个阶段，都有许多选项：从编译、链接一直到 code signing 和 packaging。<br>具体的含义和设置项可以到<a href="https://xcodebuildsettings.com/" target="_blank" rel="noopener">xcodebuildsettings</a>查看。</p>
+<h3 id="Build-rules"><a href="#Build-rules" class="headerlink" title="Build rules"></a>Build rules</h3><p>Build rules 指定了不同的文件类型该如何编译。一般来说，开发者并不需要修改这里面的内容。如果你需要对特定类型的文件添加处理方法，那么可以在此处添加一条新的规则。一条 build rule 指定了其应用于哪种类型文件，该类型文件是如何被处理的，以及输出的内容该如何处置。</p>
+<h2 id="二、一些实体的概念"><a href="#二、一些实体的概念" class="headerlink" title="二、一些实体的概念"></a>二、一些实体的概念</h2><p>Scheme、Target、Project 和 Workspace</p>
+<p>下文中的 product 是一个编译产物：可能是一个 APP，也可能是一个静态库或者动态库。</p>
+<p><img src="/images/16188041644544.jpg" alt=""></p>
+<h3 id="Workspace"><a href="#Workspace" class="headerlink" title="Workspace"></a>Workspace</h3><p>Workspace，在 Xcode 4之前，当时大多数工作流程仅限于单个 project，，一个 project 也可以引用一个或者多个其他的 project，但是这样其他的 project 不能相互引用和依赖；从 Xcode 4开始提供了 Workspace 可以管理多个 project，提供多个 project 和 target 之间的依赖关系。</p>
+<h3 id="Project"><a href="#Project" class="headerlink" title="Project"></a>Project</h3><p>Xcode project 是构建一个或者多个 product 所需的源文件、资源和配置的集合，是管理资源的容器，本身是无法被编译的。包含用于 build product 的所有元素，并且维护这些资源之间的关系。project 可以独立存在，也可以被包含在一个 Workspace 中。<br>一个 project 包含一个或者多个 target，一个 target 编译时引用的资源是它所在 project 所有管理资源的子集。project 给所有的 target 定义了默认的 build settings，target 也可以自定义相关设置来覆盖默认的 build settings。</p>
+<p>project 主要由以下几部分组成：</p>
+<ol>
+<li>引用的源文件<ol>
+<li>代码的头文件和实现文件</li>
+<li>资源文件（文本、xml 等）</li>
+<li>图片资源</li>
+<li>界面资源文件（xib、storyboard）</li>
+</ol>
+</li>
+<li>在文件结构的导航中，采用 group 来组织文件</li>
+<li>project 级别的编译配置（build configurations），比如 debug release 配置</li>
+<li>targets，给 target 提供默认的 build settings</li>
+<li>运行或者调试的可执行环境：命令参数和环境变量，如 debug</li>
+</ol>
+<h3 id="target"><a href="#target" class="headerlink" title="target"></a>target</h3><p>一个 target 对应一个 product，target 继承 project 的 build settings，target 级别的 build settings 会覆盖 project 级别的 build settings。<br>同一时间只有个一个 active target，就是当前 Scheme 指定的，它定义了这个 product 怎样被 build 的所有细节。</p>
+<p>target 常用来构建一个 APP 的不同版本，比如企业版、用户版等，Today 等扩展也是用 target 来管理的。</p>
+<h3 id="scheme"><a href="#scheme" class="headerlink" title="scheme"></a>scheme</h3><p>针对一个指定的 target，scheme 定义了 build 这个 target 时使用的 configuration，执行的任务，环境参数等等。Scheme 可以理解为一个工作流，Xcode 中预设了六个工作流：Build, Run, Test, Profile, Analyze, Archive。</p>
+<p>一个 scheme 对应一个 target，同一个 target 可以有多个 scheme，通过灵活地配置 scheme，我们可以方便地管理不同环境下 App 的测试，调试，打包流程。</p>
+<h2 id="三、xcodeproj-的本质"><a href="#三、xcodeproj-的本质" class="headerlink" title="三、xcodeproj 的本质"></a>三、xcodeproj 的本质</h2><p>工程文件的本质是什么？我们平时开发中很少会去看这个文件内部是如何组织的，基本上只有这个文件在合并代码时冲突了才会点进去。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">├── demo</span><br><span class="line">│   ├── AppDelegate.h</span><br><span class="line">│   ├── AppDelegate.m</span><br><span class="line">│   ├── Assets.xcassets</span><br><span class="line">│   ├── 。。。</span><br><span class="line">└── demo.xcodeproj</span><br><span class="line">    ├── project.pbxproj</span><br><span class="line">    ├── project.xcworkspace</span><br><span class="line">    └── xcuserdata</span><br></pre></td></tr></table></figure>
+
+<p><code>xcodeproj</code> 文件本质上是一个文件夹。它里面的 <code>project.pbxproj</code> 文件存储着 Xcode 工程的各项配置参数，本质上是一种旧风格的 Property List 文件，历史可追溯到 NeXT 的 OpenStep。其可读性不如 XML 和 JSON，为了方便阅读和理解，这个文件里有大量的注释。</p>
+<p>语法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#123; &#x2F;&#x2F; 字典</span><br><span class="line">	isa &#x3D; XCBuildConfiguration; &#x2F;&#x2F; 对象的类型</span><br><span class="line">	buildSettings &#x3D; &#123;</span><br><span class="line">		LD_RUNPATH_SEARCH_PATHS &#x3D; ( &#x2F;&#x2F; 数组</span><br><span class="line">			&quot;$(inherited)&quot;,</span><br><span class="line">			&quot;@executable_path&#x2F;Frameworks&quot;,</span><br><span class="line">		);</span><br><span class="line">	&#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><code>project.pbxproj</code> 文件里数据层级的最外层是 <code>rootObject</code>，然后其次 objects 里面是平铺存放的各种对象，相同的类型放到一起，被称之为一个 section，section 是比较虚的概念，本身没有类型，只是一段注释。</p>
+<p>一些常见的类型，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">PBXBuildFile                &#x2F;&#x2F; 所有可编译的文件，比如源码、资源文件、nib 文件等</span><br><span class="line">PBXBuildPhase               &#x2F;&#x2F; Build Phases 里定义的步骤，如拷贝资源、运行自定义脚本</span><br><span class="line">PBXHeadersBuildPhase        &#x2F;&#x2F; public header</span><br><span class="line">PBXResourcesBuildPhase      &#x2F;&#x2F; Assets storyboard</span><br><span class="line">PBXShellScriptBuildPhase    &#x2F;&#x2F; [CP] Check Pods Manifest.lock</span><br><span class="line">PBXSourcesBuildPhase        &#x2F;&#x2F; Build Phases - Compile Source</span><br><span class="line">PBXFileReference            &#x2F;&#x2F; 项目文件导航区里的所有文件都是这个类型</span><br><span class="line">PBXGroup                    &#x2F;&#x2F; 项目文件导航区里的黄色「文件夹」样式的 group</span><br><span class="line">PBXNativeTarget             &#x2F;&#x2F; 项目里的 target</span><br><span class="line">PBXProject                  &#x2F;&#x2F; 项目的定义</span><br><span class="line">XCBuildConfiguration        &#x2F;&#x2F; 项目或者 target 的 configuration</span><br></pre></td></tr></table></figure>
+
+<p><strong>PBXProject</strong> 项目的一些定义，主要属性是targets，描述了这个项目下有哪些 target<br><strong>PBXNativeTarget</strong> 项目中的 target，定义了有哪些 <code>buildConfigurationList</code> 和 <code>buildPhases</code><br><strong>PBXBuildFile</strong></p>
+<p>在 Build Phases 里出现的可编译资源都是这个类型，比如依赖的一个库，或者代码源文件，再或者一些图片资源，StoryBoard xib 等资源。</p>
+<h2 id="四、点击-run-按钮后都发生了什么"><a href="#四、点击-run-按钮后都发生了什么" class="headerlink" title="四、点击 run 按钮后都发生了什么"></a>四、点击 run 按钮后都发生了什么</h2><p><img src="/images/build_log.png" alt="build_log"></p>
+<p>可以看到上面先 build 的是一些静态库，或者依赖的 target，最后再 build 当前 Scheme 对应的 target。把整个 build 日志导出来看，编译每个 target 开始前都会打印是编译哪个  project 的 target，并且使用的是哪个 configuration：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Build target demo of project demo with configuration Inhouse</span><br></pre></td></tr></table></figure>
+
+<p>编译过程：</p>
+<ul>
+<li>编译依赖的的库和 target</li>
+<li>写入辅助文件：hmap、script 等</li>
+<li>执行预设脚本，如 CocoaPod 编译前脚本，checkPods Manifest.lock</li>
+<li>编译文件：针对每一个文件进行编译，生成可执行文件 Mach-O</li>
+<li>链接文件：将项目中的多个可执行文件合并成一个文件</li>
+<li>资源的编译、优化、导入（Asset、nib 等）</li>
+<li>配置文件生成（info.plist里有写参数是动态配置的)</li>
+<li>签名、打包</li>
+</ul>
+<p>TODO：待补全源码编译的过程：预编译-词法分析-语义分析-巴拉巴拉</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://developer.apple.com/library/archive/featuredarticles/XcodeConcepts/Concept-Projects.html" target="_blank" rel="noopener">Xcode Concepts - Apple Developer Documentation</a></li>
+<li><a href="https://objccn.io/issue-6-1/" target="_blank" rel="noopener">https://objccn.io/issue-6-1/-Build 过程</a></li>
+<li><a href="https://nshipster.com/xcconfig/" target="_blank" rel="noopener">https://nshipster.com/xcconfig/</a></li>
+</ul>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/09/03/19-ios-hybrid/" class="prev">上一篇</a><a href="/2018/01/26/18-iOS-crash/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+var disqus_identifier = '2018/03/26/18-z1-share-xcodeproj/';
+var disqus_title = 'Xcode 的 project 文件介绍';
+var disqus_url = 'http://iosgg.cn/2018/03/26/18-z1-share-xcodeproj/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//sanyucz.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2021 <a href="http://iosgg.cn">Abin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/m-forks/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-100885072-1",'auto');ga('send','pageview');</script></body></html>

@@ -51,7 +51,7 @@
 <li>返回 SyncData</li>
 </ol>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><code>@synchronized</code> 的本质是根据 token 来获取一把锁，在编译的时候在需要保持同步的代码前后分别插入 <code>objc_sync_enter()</code> 和 <code>objc_sync_exit()</code> 函数。token 和 锁的映射数据是由一个哈希map来存储，key 是 token，value 是映射数据的链表。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/06/10/13-objc-weak/" class="prev">PREV</a><a href="/2017/05/12/11-objc-block/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/06/10/13-objc-weak/" class="prev">上一篇</a><a href="/2017/05/12/11-objc-block/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
 var disqus_identifier = '2017/06/08/12-objc-synchronized/';
 var disqus_title = '@synchronized 的实现方式';
 var disqus_url = 'http://iosgg.cn/2017/06/08/12-objc-synchronized/';

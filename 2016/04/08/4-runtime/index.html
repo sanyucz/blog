@@ -167,7 +167,7 @@
 <p><img src="/images/objc_ivar.png" alt="objc_iva"></p>
 <p>使用 <code>clang -rewrite-objc BBObject.m</code> 可以把得到重写后的 C++ 文件，在其中也可以看到其中获取属性就是自身地址加偏移量：</p>
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="built_in">NSString</span> * _I_BBObject_bb_name(BBObject * <span class="keyword">self</span>, SEL _cmd) &#123; </span><br><span class="line">    <span class="keyword">return</span> (*(<span class="built_in">NSString</span> **)((<span class="keyword">char</span> *)<span class="keyword">self</span> + OBJC_IVAR_$_BBObject$_bb_name)); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</div></article></div></main><footer><div class="paginator"><a href="/2016/05/22/5-multithreading_iOS/" class="prev">上一篇</a><a href="/2016/03/27/3-make-blog-use-githubPages-hexo/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+</div></article></div></main><footer><div class="paginator"><a href="/2016/05/22/5-multithreading_iOS/" class="prev">PREV</a><a href="/2016/03/27/3-make-blog-use-githubPages-hexo/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
 var disqus_identifier = '2016/04/08/4-runtime/';
 var disqus_title = 'runtime 源码学习笔记';
 var disqus_url = 'http://iosgg.cn/2016/04/08/4-runtime/';

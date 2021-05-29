@@ -42,7 +42,7 @@
 <h2 id="autorelease-和-runloop"><a href="#autorelease-和-runloop" class="headerlink" title="autorelease 和 runloop"></a>autorelease 和 runloop</h2><p>先思考一个问题：<code>AutoreleasePoolPage</code> 的作用是把一个对象加入自动释放池后，在 <code>objc_autoreleasePoolPop</code> 的时候就会自动清理和释放这些对象，而我们的APP一经启动，在运行的这段时间内，是如何进行清理的，即什么时候会调用 <code>objc_autoreleasePoolPop</code> 方法？</p>
 <p>答案就是主线程在 runloop 中添加了两个 observe，分别监听了 <code>kCFRunLoopEntry</code> 和 <code>kCFRunLoopBeforeWaiting</code>，来做<br><code>objc_autoreleasePoolPush</code> 和 <code>objc_autoreleasePoolPop</code> 操作。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>autoreleasepool</code> 的实现是一个双向链表，当 push 的时候会插入一个 nil 来当做哨兵对象，并把这个哨兵对象的地址返回，之后任何对象调用 <code>autorelease</code> 方法时，都会把对象插入进去。当调用 pop 方法时，入参就是哨兵对象的地址，<code>autoreleasepool</code> 会把入参地址之后的所有对象都挨个发送 <code>release</code> 消息。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/10/10/17-send-week-report-email/" class="prev">上一篇</a><a href="/2017/06/10/13-objc-weak/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/10/10/17-send-week-report-email/" class="prev">PREV</a><a href="/2017/06/10/13-objc-weak/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'sanyucz';
 var disqus_identifier = '2017/06/18/14-autoreleasepool/';
 var disqus_title = 'autoreleasepool 是如何实现的';
 var disqus_url = 'http://iosgg.cn/2017/06/18/14-autoreleasepool/';
